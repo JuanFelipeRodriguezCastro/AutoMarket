@@ -1,0 +1,7 @@
+{{template "header" .}}
+<div class="card">
+	<h1>{{.Title}}</h1>
+	{{if .Error}}<p class="message error">{{.Error}}</p>{{end}}
+	<p><a href="/">Volver al catálogo</a></p>
+</div>
+{{template "footer" .}}

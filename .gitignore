@@ -1,0 +1,24 @@
+# Directorio de datos generados en ejecución (versiones anteriores)
+data/
+
+# Certificados TLS autofirmados para desarrollo local
+certs/
+
+# Variables de entorno reales (nunca se commitean)
+.env
+
+# Binarios ejecutables compilados de Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+automarket
+
+# Archivos de entorno / IDEs
+.vscode/
+.idea/
+
+# HTML intermedio generado al exportar el informe a PDF
+docs/*.html
+

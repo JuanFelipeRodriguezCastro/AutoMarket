@@ -1,0 +1,46 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: automarket-sprint3-mysql
+    environment:
+      MYSQL_DATABASE: automarket
+      MYSQL_USER: automarket
+      MYSQL_PASSWORD: automarket
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      # Puerto opcional para conectarse con un cliente MySQL desde el host.
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  automarket:
+    build:
+      context: .
+    image: automarket-sprint3:local
+    container_name: automarket-sprint3
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+    environment:
+      GIN_MODE: release
+      PORT: "8080"
+      DATABASE_DSN: "automarket:automarket@tcp(mysql:3306)/automarket?parseTime=true&charset=utf8mb4"
+      AUTOMARKET_ADMIN_USER: admin
+      AUTOMARKET_ADMIN_PASSWORD: admin
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

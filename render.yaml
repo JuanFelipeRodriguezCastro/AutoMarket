@@ -1,0 +1,20 @@
+# Despliegue gratuito en Render (https://render.com).
+# Render construye el Dockerfile, termina el TLS y expone el servicio por HTTPS.
+# La base de datos MySQL debe ser externa y gratuita (por ejemplo, TiDB Cloud
+# Serverless o Aiven). Render define la variable PORT automáticamente.
+services:
+  - type: web
+    name: automarket-sprint3
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_DSN
+        sync: false
+      - key: AUTOMARKET_ADMIN_USER
+        value: admin
+      - key: AUTOMARKET_ADMIN_PASSWORD
+        sync: false
+      - key: GIN_MODE
+        value: release

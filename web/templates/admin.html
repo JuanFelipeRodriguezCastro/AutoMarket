@@ -1,0 +1,65 @@
+{{template "header" .}}
+<h1>Administración</h1>
+{{if .Message}}<p class="message ok">{{.Message}}</p>{{end}}
+{{if .Error}}<p class="message error">{{.Error}}</p>{{end}}
+
+<p><a href="/admin/audit">Ver historial de auditoría →</a></p>
+
+<div class="card">
+	<h2>Publicaciones pendientes de aprobación</h2>
+	{{if .Pending}}
+	<table>
+		<thead>
+			<tr><th>Vehículo</th><th>Año</th><th>Precio</th><th>Fotos</th><th>Vendedor</th><th>Acciones</th></tr>
+		</thead>
+		<tbody>
+			{{range .Pending}}
+			<tr id="pub-{{.ID}}">
+				<td>{{.Brand}} {{.Model}}</td>
+				<td>{{.Year}}</td>
+				<td>${{printf "%.2f" .Price}}</td>
+				<td>{{len .Photos}}</td>
+				<td>{{.SellerID}}</td>
+				<td>
+					<form method="post" action="/admin/publications/{{.ID}}/approve" style="display:inline">
+						<button type="submit">Autorizar</button>
+					</form>
+					<form method="post" action="/admin/publications/{{.ID}}/delete" style="display:inline">
+						<button class="danger" type="submit">Eliminar</button>
+					</form>
+				</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+	{{else}}
+	<p class="muted">No hay publicaciones pendientes.</p>
+	{{end}}
+</div>
+
+<div class="card">
+	<h2>Usuarios</h2>
+	{{if .Users}}
+	<table>
+		<thead>
+			<tr><th>Usuario</th><th>Rol</th><th>Acción</th></tr>
+		</thead>
+		<tbody>
+			{{range .Users}}
+			<tr id="user-{{.ID}}">
+				<td>{{.Username}}</td>
+				<td>{{.Role}}</td>
+				<td>
+					<form method="post" action="/admin/users/{{.ID}}/delete">
+						<button class="danger" type="submit">Eliminar</button>
+					</form>
+				</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+	{{else}}
+	<p class="muted">No hay usuarios registrados.</p>
+	{{end}}
+</div>
+{{template "footer" .}}

@@ -1,0 +1,36 @@
+{{template "header" .}}
+<h1>Catálogo de vehículos en venta</h1>
+{{if .Message}}<p class="message ok">{{.Message}}</p>{{end}}
+{{if .Error}}<p class="message error">{{.Error}}</p>{{end}}
+
+{{if .Publications}}
+<div class="card">
+	<table>
+		<thead>
+			<tr><th>Vehículo</th><th>Año</th><th>Precio</th><th>Fotos</th><th>Contacto del vendedor</th></tr>
+		</thead>
+		<tbody>
+			{{range .Publications}}
+			<tr id="pub-{{.ID}}">
+				<td>{{.Brand}} {{.Model}}</td>
+				<td>{{.Year}}</td>
+				<td>${{printf "%.2f" .Price}}</td>
+				<td>
+					{{if .Photos}}
+					<div class="gallery">
+						{{range .Photos}}<a href="{{.}}" target="_blank" rel="noopener"><img src="{{.}}" alt="Foto del vehículo" loading="lazy"></a>{{end}}
+					</div>
+					{{else}}
+					<span class="muted">Sin fotos</span>
+					{{end}}
+				</td>
+				<td>Tel: {{.Phone}}<br>Email: {{.Email}}</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+</div>
+{{else}}
+<div class="card"><p class="muted">No hay vehículos publicados en este momento.</p></div>
+{{end}}
+{{template "footer" .}}

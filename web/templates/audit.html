@@ -1,0 +1,45 @@
+{{template "header" .}}
+<h1>Historial de auditoría</h1>
+{{if .Message}}<p class="message ok">{{.Message}}</p>{{end}}
+{{if .Error}}<p class="message error">{{.Error}}</p>{{end}}
+
+<div class="card">
+	<h2>Integridad de la traza</h2>
+	<p>
+		{{if .IntegrityOK}}
+		<span class="badge ok">Íntegra</span>
+		La cadena de hashes es válida: no se detectaron alteraciones en el historial.
+		{{else}}
+		<span class="badge bad">Alterada</span>
+		La cadena de hashes no coincide: el historial pudo haber sido modificado.
+		{{end}}
+	</p>
+</div>
+
+<div class="card">
+	<h2>Eventos registrados</h2>
+	{{if .Logs}}
+	<table class="audit-table">
+		<thead>
+			<tr><th>Fecha</th><th>Acción</th><th>Usuario</th><th>Rol</th><th>Resultado</th><th>Detalles</th></tr>
+		</thead>
+		<tbody>
+			{{range .Logs}}
+			<tr>
+				<td>{{.Timestamp.Format "2006-01-02 15:04:05"}}</td>
+				<td>{{.Action}}</td>
+				<td>{{.UserID}}</td>
+				<td>{{.Role}}</td>
+				<td>{{if .Success}}<span class="badge ok">OK</span>{{else}}<span class="badge bad">Denegado</span>{{end}}</td>
+				<td>{{.Details}}</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+	{{else}}
+	<p class="muted">No hay eventos registrados.</p>
+	{{end}}
+</div>
+
+<p><a href="/admin">← Volver al panel de administración</a></p>
+{{template "footer" .}}

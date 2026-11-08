@@ -1,0 +1,7 @@
+.git
+data/
+docs/
+certs/
+.env
+*.exe
+*.log
