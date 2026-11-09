@@ -4,58 +4,59 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>{{.Title}} · AutoMarket</title>
-	<style>
-		* { box-sizing: border-box; }
-		body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #0f172a; }
-		header { background: #0f172a; color: #fff; padding: .75rem 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-		header a { color: #fff; text-decoration: none; }
-		header .brand { font-weight: 700; font-size: 1.1rem; }
-		header nav { margin-left: auto; display: flex; align-items: center; gap: 1rem; }
-		header form { display: inline; }
-		main { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
-		.card { background: #fff; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,.1); margin-bottom: 1.5rem; }
-		table { width: 100%; border-collapse: collapse; }
-		th, td { text-align: left; padding: .5rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-		label { display: block; margin: .75rem 0 .25rem; font-weight: 600; }
-		input { width: 100%; padding: .5rem; border: 1px solid #cbd5e1; border-radius: 6px; }
-		button, .btn { background: #2563eb; color: #fff; border: none; padding: .5rem 1rem; border-radius: 6px; cursor: pointer; font-size: .9rem; }
-		button.danger { background: #b91c1c; }
-		button.ghost { background: #475569; }
-		.message { padding: .75rem 1rem; border-radius: 6px; margin-bottom: 1rem; }
-		.message.ok { background: #dcfce7; color: #15803d; }
-		.message.error { background: #fee2e2; color: #b91c1c; }
-		.muted { color: #64748b; }
-		.gallery { display: flex; flex-wrap: wrap; gap: .35rem; }
-		.gallery img { width: 64px; height: 64px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0; }
-		.audit-table td { font-size: .85rem; }
-		.badge { display: inline-block; padding: .15rem .5rem; border-radius: 999px; font-size: .8rem; font-weight: 600; }
-		.badge.ok { background: #dcfce7; color: #15803d; }
-		.badge.bad { background: #fee2e2; color: #b91c1c; }
-		footer { text-align: center; color: #64748b; padding: 2rem; }
-	</style>
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231f1d1a'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='sans-serif' font-weight='700' font-size='38' fill='%23f6f4ef'%3EA%3C/text%3E%3C/svg%3E">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="/static/app.css">
+	<script>document.documentElement.classList.add("js")</script>
 </head>
 <body>
-<header>
-	<a class="brand" href="/">AutoMarket</a>
-	<nav>
-		<a href="/">Catálogo</a>
+<header class="site-header">
+	<div class="inner">
+		<a class="brand" href="/" aria-label="AutoMarket, ir al catálogo">
+			<svg viewBox="200 400 2180 620" role="img" aria-hidden="true">
+				<path d="M2092 735 L2160 680 L2232 706 L2338 928 L2192 998 L2084 778 Z" fill="#b4501f" stroke="#b4501f" stroke-width="22" stroke-linejoin="round"></path>
+				<circle cx="2155" cy="740" r="30" fill="#f6f4ef"></circle>
+				<path d="M250 722 Q290 668 390 643 Q520 614 690 608 Q765 604 870 540 Q1010 452 1220 442 Q1500 438 1800 538 Q1940 585 2040 610 Q2140 640 2155 740" fill="none" stroke="#2b2926" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"></path>
+				<text x="330" y="950" font-family="'Bricolage Grotesque',sans-serif" font-weight="700" font-size="310" textLength="1665" lengthAdjust="spacingAndGlyphs" letter-spacing="-6"><tspan fill="#1f1d1a">auto</tspan><tspan fill="#b4501f">market</tspan></text>
+			</svg>
+		</a>
+		<nav class="site-nav" aria-label="Principal">
+			<a class="pill{{if eq .Nav "catalog"}} is-active{{end}}" href="/">Catálogo</a>
+			{{if .LoggedIn}}
+				{{if eq .Role "VENDEDOR"}}<a class="pill{{if eq .Nav "seller"}} is-active{{end}}" href="/seller">Mi panel</a>{{end}}
+				{{if eq .Role "ADMINISTRADOR"}}<a class="pill{{if eq .Nav "admin"}} is-active{{end}}" href="/admin">Administración</a>{{end}}
+			{{end}}
+		</nav>
 		{{if .LoggedIn}}
-			{{if eq .Role "VENDEDOR"}}<a href="/seller">Mi panel</a>{{end}}
-			{{if eq .Role "ADMINISTRADOR"}}<a href="/admin">Administración</a>{{end}}
-			<span class="muted">{{.Username}} · {{.Role}}</span>
-			<form method="post" action="/logout"><button class="ghost" type="submit">Cerrar sesión</button></form>
+		<div class="session">
+			<div class="user-chip" title="{{.Username}} · {{.RoleLabel}}">
+				<span class="avatar">{{.UserInitial}}</span>
+				<span class="meta"><span class="name">{{.Username}}</span><span class="role">{{.RoleLabel}}</span></span>
+			</div>
+			<form method="post" action="/logout"><button class="pill pill-outline" type="submit">Salir</button></form>
+		</div>
 		{{else}}
-			<a href="/login">Iniciar sesión</a>
-			<a href="/register">Registrarse</a>
+		<div class="session">
+			<a class="pill" href="/login">Iniciar sesión</a>
+			<a class="pill pill-dark" href="/register">Vender mi auto</a>
+		</div>
 		{{end}}
-	</nav>
+	</div>
 </header>
 <main>
 {{end}}
 
 {{define "footer"}}
 </main>
-<footer>AutoMarket — Laboratorio de Software III</footer>
+<footer class="site-footer">AutoMarket · Laboratorio de Software III</footer>
+{{if .Message}}<div class="toast{{if .MessageBad}} is-bad{{end}}" role="status"><span class="dot"></span>{{.Message}}</div>{{end}}
+<script src="/static/app.js" defer></script>
 </body>
 </html>
+{{end}}
+
+{{define "photo"}}{{/* Foto de portada con marcador de posición rayado. Recibe un pubView. */}}
+{{if .Cover}}<img src="{{.Cover}}" alt="{{.Title}}" loading="lazy">{{else}}<span class="placeholder">sin fotos</span>{{end}}
 {{end}}

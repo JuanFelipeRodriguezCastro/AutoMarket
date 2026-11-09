@@ -4,6 +4,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -98,11 +99,26 @@ type pageData struct {
 	Role     domain.Role
 	Message  string
 	Error    string
+	// MessageBad pinta el aviso emergente (toast) como una acción destructiva.
+	MessageBad bool
+	// Nav identifica la sección activa del menú: catalog, seller o admin.
+	Nav string
 }
+
+// UserInitial devuelve la inicial del usuario para el avatar del encabezado.
+func (p pageData) UserInitial() string { return initial(p.Username) }
+
+// RoleLabel devuelve el rol del usuario en texto amigable.
+func (p pageData) RoleLabel() string { return roleLabel(p.Role) }
 
 type catalogView struct {
 	pageData
-	Publications []domain.Publication
+	Publications []pubView
+}
+
+// CountLabel devuelve "N vehículos disponibles".
+func (v catalogView) CountLabel() string {
+	return plural(len(v.Publications), "Ningún vehículo disponible", "vehículo disponible", "vehículos disponibles")
 }
 
 type authView struct {
@@ -111,18 +127,37 @@ type authView struct {
 
 type sellerView struct {
 	pageData
-	Publications []domain.Publication
+	Publications []pubView
+}
+
+// CountLabel devuelve "N publicaciones".
+func (v sellerView) CountLabel() string {
+	return plural(len(v.Publications), "Sin publicaciones", "publicación", "publicaciones")
 }
 
 type adminView struct {
 	pageData
-	Pending []domain.Publication
-	Users   []domain.User
+	// Tab es la pestaña activa: pending o users.
+	Tab     string
+	Pending []pubView
+	Users   []userView
+}
+
+// Headline resume el estado de la cola de revisión.
+func (v adminView) Headline() string {
+	switch len(v.Pending) {
+	case 0:
+		return "Todo está al día"
+	case 1:
+		return "1 publicación espera revisión"
+	default:
+		return fmt.Sprintf("%d publicaciones esperan revisión", len(v.Pending))
+	}
 }
 
 type auditView struct {
 	pageData
-	Logs        []domain.AuditLog
+	Logs        []auditEntry
 	IntegrityOK bool
 }
 
@@ -133,17 +168,26 @@ type auditView struct {
 // flashMessages traduce códigos de estado de la URL a mensajes legibles. Se usa
 // una lista blanca para no reflejar texto arbitrario en la página.
 var flashMessages = map[string]string{
-	"registered":   "Cuenta creada correctamente. Ya puede iniciar sesión.",
-	"published":    "Publicación registrada en estado PENDIENTE de aprobación.",
-	"sold":         "Publicación marcada como VENDIDA.",
-	"approved":     "Publicación aprobada y visible en el catálogo.",
-	"deleted_pub":  "Publicación eliminada.",
+	"registered":   "Cuenta creada. Ingresá para publicar tu auto.",
+	"published":    "Enviado a revisión. Aparecerá en el catálogo cuando se apruebe.",
+	"sold":         "¡Felicitaciones por la venta!",
+	"approved":     "Publicación aprobada: ya está en el catálogo.",
+	"deleted_pub":  "Publicación rechazada y eliminada.",
 	"deleted_user": "Usuario eliminado.",
 }
+
+// flashBad marca los códigos que corresponden a acciones destructivas.
+var flashBad = map[string]bool{"deleted_pub": true, "deleted_user": true}
 
 // flash devuelve el mensaje asociado a un código de estado.
 func flash(key string) string {
 	return flashMessages[key]
+}
+
+// setFlash copia el mensaje del código de estado en el modelo de la página.
+func setFlash(d *pageData, key string) {
+	d.Message = flash(key)
+	d.MessageBad = flashBad[key]
 }
 
 // currentSession intenta resolver la sesión actual a partir de la cookie.

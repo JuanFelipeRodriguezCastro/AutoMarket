@@ -1,36 +1,89 @@
 {{template "header" .}}
-<h1>Catálogo de vehículos en venta</h1>
-{{if .Message}}<p class="message ok">{{.Message}}</p>{{end}}
-{{if .Error}}<p class="message error">{{.Error}}</p>{{end}}
+<section class="hero">
+	<h1>Encontrá tu próximo auto, directo de su dueño.</h1>
+	<p>Cada publicación es revisada antes de aparecer. Contactá al vendedor sin intermediarios.</p>
+	{{if .Publications}}
+	<div class="toolbar">
+		<label class="search">
+			<span class="icon" aria-hidden="true"></span>
+			<span class="sr-only">Buscar</span>
+			<input type="search" data-search placeholder="Buscá por marca o modelo" autocomplete="off">
+		</label>
+		<div class="segmented" role="group" aria-label="Ordenar">
+			<button type="button" class="is-active" data-sort="recent" aria-pressed="true">Recientes</button>
+			<button type="button" data-sort="low" aria-pressed="false">Menor precio</button>
+			<button type="button" data-sort="high" aria-pressed="false">Mayor precio</button>
+		</div>
+	</div>
+	{{end}}
+</section>
+
+{{if .Error}}<p class="alert alert-error">{{.Error}}</p>{{end}}
+
+<span class="result-count" data-count>{{.CountLabel}}</span>
 
 {{if .Publications}}
-<div class="card">
-	<table>
-		<thead>
-			<tr><th>Vehículo</th><th>Año</th><th>Precio</th><th>Fotos</th><th>Contacto del vendedor</th></tr>
-		</thead>
-		<tbody>
-			{{range .Publications}}
-			<tr id="pub-{{.ID}}">
-				<td>{{.Brand}} {{.Model}}</td>
-				<td>{{.Year}}</td>
-				<td>${{printf "%.2f" .Price}}</td>
-				<td>
-					{{if .Photos}}
-					<div class="gallery">
-						{{range .Photos}}<a href="{{.}}" target="_blank" rel="noopener"><img src="{{.}}" alt="Foto del vehículo" loading="lazy"></a>{{end}}
-					</div>
-					{{else}}
-					<span class="muted">Sin fotos</span>
-					{{end}}
-				</td>
-				<td>Tel: {{.Phone}}<br>Email: {{.Email}}</td>
-			</tr>
-			{{end}}
-		</tbody>
-	</table>
+<div class="grid-cards" data-catalog>
+	{{range .Publications}}
+	<button type="button" class="car-card" id="pub-{{.ID}}" data-card data-open="detalle-{{.ID}}"
+		data-search="{{.SearchText}}" data-price="{{printf "%.0f" .Price}}" data-created="{{.CreatedUnix}}">
+		<div class="photo">
+			{{template "photo" .}}
+			<span class="tag">{{.PhotoLabel}}</span>
+		</div>
+		<div class="body">
+			<div class="row"><span class="name">{{.Brand}} {{.Model}}</span><span class="year">{{.Year}}</span></div>
+			<span class="price">{{.PriceLabel}}</span>
+			<span class="more">Ver detalles y contacto →</span>
+		</div>
+	</button>
+	{{end}}
 </div>
+
+<div class="empty" data-empty hidden>
+	<strong>No encontramos autos con esa búsqueda</strong>
+	<span>Probá con otra marca o borrá el filtro.</span>
+	<button type="button" class="btn btn-dark" data-clear style="margin-top:8px">Ver todo el catálogo</button>
+</div>
+
+<noscript><style>.detail{display:block;position:static;margin:22px 0;width:100%}.detail .close{display:none}</style></noscript>
+{{range .Publications}}
+<dialog class="detail" id="detalle-{{.ID}}" aria-label="{{.Brand}} {{.Model}} {{.Year}}">
+	<div class="sheet">
+		<div class="media">
+			<div class="photo">
+				{{if .Photos}}<img data-main src="{{index .Photos 0}}" alt="{{.Title}}">{{else}}<span class="placeholder">sin fotos</span>{{end}}
+			</div>
+			{{if gt (len .Photos) 1}}
+			<div class="thumbs">
+				{{range $i, $url := .Photos}}
+				<button type="button" data-thumb="{{$url}}" class="{{if eq $i 0}}is-active{{end}}" aria-label="Ver esta foto"><img src="{{$url}}" alt="" loading="lazy"></button>
+				{{end}}
+			</div>
+			{{end}}
+		</div>
+		<div class="info">
+			<form method="dialog"><button class="close" aria-label="Cerrar">×</button></form>
+			<div class="heading">
+				<span class="muted">{{.Year}}</span>
+				<h2>{{.Brand}} {{.Model}}</h2>
+				<span class="price">{{.PriceLabel}}</span>
+			</div>
+			<div class="contact">
+				<span class="eyebrow">CONTACTO DEL VENDEDOR</span>
+				<a class="call" href="tel:{{.Phone}}">Llamar<span>{{.Phone}}</span></a>
+				<a class="mail" href="mailto:{{.Email}}">Escribir<span>{{.Email}}</span></a>
+			</div>
+			<span class="fine">Publicación revisada por AutoMarket. Nunca envíes dinero antes de ver el vehículo.</span>
+		</div>
+	</div>
+</dialog>
+{{end}}
 {{else}}
-<div class="card"><p class="muted">No hay vehículos publicados en este momento.</p></div>
+<div class="empty">
+	<strong>Todavía no hay autos publicados</strong>
+	<span>Volvé pronto o publicá el tuyo.</span>
+	<a class="btn btn-dark" href="/register" style="margin-top:8px">Vender mi auto</a>
+</div>
 {{end}}
 {{template "footer" .}}

@@ -1,68 +1,67 @@
 {{template "header" .}}
-<h1>Panel del vendedor</h1>
-{{if .Message}}<p class="message ok">{{.Message}}</p>{{end}}
-{{if .Error}}<p class="message error">{{.Error}}</p>{{end}}
+<section class="page-head">
+	<span class="kicker">Hola, {{.Username}}</span>
+	<h1>Tu panel de vendedor</h1>
+</section>
 
-<div class="card">
-	<h2>Publicar un vehículo</h2>
-	<form method="post" action="/seller/publications" enctype="multipart/form-data">
-		<label for="brand">Marca</label>
-		<input id="brand" name="brand" required>
-		<label for="model">Modelo</label>
-		<input id="model" name="model" required>
-		<label for="year">Año</label>
-		<input id="year" name="year" type="number" min="1900" required>
-		<label for="price">Precio</label>
-		<input id="price" name="price" type="number" step="0.01" min="0.01" required>
-		<label for="phone">Teléfono de contacto</label>
-		<input id="phone" name="phone" required>
-		<label for="email">Correo de contacto</label>
-		<input id="email" name="email" type="email" required>
-		<label for="photos">Fotos del vehículo (máximo 22)</label>
-		<input id="photos" name="photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
-		<p class="muted">Puede adjuntar hasta 22 imágenes JPEG, PNG, WEBP o GIF (máximo 5 MB cada una).</p>
-		<p><button type="submit">Enviar a aprobación</button></p>
+<div class="seller-layout">
+	<form class="card pub-form" method="post" action="/seller/publications" enctype="multipart/form-data">
+		<div class="heading">
+			<h2>Publicar un vehículo</h2>
+			<span>Lo revisamos y aparece en el catálogo cuando esté aprobado.</span>
+		</div>
+		{{if .Error}}<div class="alert alert-error" role="alert">{{.Error}}</div>{{end}}
+
+		<span class="eyebrow">1 · EL AUTO</span>
+		<div class="field-grid">
+			<label class="field">Marca<input id="brand" name="brand" placeholder="Toyota" required></label>
+			<label class="field">Modelo<input id="model" name="model" placeholder="Corolla" required></label>
+			<label class="field">Año<input id="year" name="year" type="number" min="1900" placeholder="2020" required></label>
+			<label class="field">Precio ($)<input id="price" name="price" type="number" step="0.01" min="0.01" placeholder="18500000" required></label>
+		</div>
+
+		<span class="eyebrow">2 · CÓMO TE CONTACTAN</span>
+		<div class="field-grid">
+			<label class="field">Teléfono<input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="300 123 4567" required></label>
+			<label class="field">Correo<input id="email" name="email" type="email" autocomplete="email" placeholder="vos@correo.com" required></label>
+		</div>
+
+		<div class="split">
+			<label class="eyebrow" for="photos">3 · FOTOS</label>
+			<span class="counter" data-photo-counter></span>
+		</div>
+		<input class="photo-input" id="photos" name="photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-photo-input>
+		<div class="photo-picker" data-photo-picker>
+			<button type="button" class="add" data-photo-add><span>+</span>Agregar</button>
+		</div>
+		<div class="alert alert-error" data-photo-error hidden></div>
+		<span class="hint">Hasta 22 imágenes JPG, PNG, WEBP o GIF, de 5 MB como máximo cada una.</span>
+
+		<button class="btn btn-accent btn-lg" type="submit">Enviar a revisión</button>
 	</form>
-</div>
 
-<div class="card">
-	<h2>Mis publicaciones</h2>
-	{{if .Publications}}
-	<table>
-		<thead>
-			<tr><th>Vehículo</th><th>Año</th><th>Precio</th><th>Fotos</th><th>Estado</th><th>Acción</th></tr>
-		</thead>
-		<tbody>
-			{{range .Publications}}
-			<tr id="pub-{{.ID}}">
-				<td>{{.Brand}} {{.Model}}</td>
-				<td>{{.Year}}</td>
-				<td>${{printf "%.2f" .Price}}</td>
-				<td>
-					{{if .Photos}}
-					<div class="gallery">
-						{{range .Photos}}<a href="{{.}}" target="_blank" rel="noopener"><img src="{{.}}" alt="Foto del vehículo" loading="lazy"></a>{{end}}
-					</div>
-					{{else}}
-					<span class="muted">Sin fotos</span>
-					{{end}}
-				</td>
-				<td>{{.Status}}</td>
-				<td>
-					{{if ne .Status "VENDIDO"}}
-					<form method="post" action="/seller/publications/{{.ID}}/sold" style="display:inline">
-						<button type="submit">Reportar venta</button>
-					</form>
-					{{else}}
-					<span class="muted">—</span>
-					{{end}}
-				</td>
-			</tr>
+	<div class="list-col">
+		<div class="split">
+			<h2>Mis publicaciones</h2>
+			<span class="muted" style="font-size:14px">{{.CountLabel}}</span>
+		</div>
+		{{range .Publications}}
+		<div class="mine" id="pub-{{.ID}}">
+			<div class="photo">{{template "photo" .}}</div>
+			<div class="meta">
+				<strong>{{.Brand}} {{.Model}} · {{.Year}}</strong>
+				<span>{{.PriceLabel}} · {{.PhotoLabel}}</span>
+			</div>
+			<span class="status {{.StatusClass}}">{{.StatusLabel}}</span>
+			{{if .CanSell}}
+			<form method="post" action="/seller/publications/{{.ID}}/sold">
+				<button class="btn btn-outline" type="submit" data-confirm="¿Confirmás la venta?">Marcar vendido</button>
+			</form>
 			{{end}}
-		</tbody>
-	</table>
-	{{else}}
-	<p class="muted">Todavía no ha publicado vehículos.</p>
-	{{end}}
+		</div>
+		{{else}}
+		<div class="empty" style="padding:40px 20px">Todavía no publicaste nada. Completá el formulario para empezar.</div>
+		{{end}}
+	</div>
 </div>
 {{template "footer" .}}

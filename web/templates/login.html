@@ -1,15 +1,21 @@
 {{template "header" .}}
-<div class="card" style="max-width: 420px; margin: 0 auto;">
-	<h1>Iniciar sesión</h1>
-	{{if .Message}}<p class="message ok">{{.Message}}</p>{{end}}
-	{{if .Error}}<p class="message error">{{.Error}}</p>{{end}}
-	<form method="post" action="/login">
-		<label for="username">Usuario</label>
-		<input id="username" name="username" required>
-		<label for="password">Contraseña</label>
-		<input id="password" name="password" type="password" required>
-		<p><button type="submit">Entrar</button></p>
-	</form>
-	<p class="muted">¿No tiene cuenta? <a href="/register">Regístrese como vendedor</a>.</p>
+<div class="auth-wrap">
+	<div class="card auth-card">
+		<div class="heading">
+			<h1>Hola de nuevo</h1>
+			<span>Ingresá para gestionar tus publicaciones.</span>
+		</div>
+		{{if .Error}}<div class="alert alert-error" role="alert">{{.Error}}</div>{{end}}
+		<form method="post" action="/login">
+			<label class="field">Usuario
+				<input id="username" name="username" autocomplete="username" required autofocus>
+			</label>
+			<label class="field">Contraseña
+				<input id="password" name="password" type="password" autocomplete="current-password" required>
+			</label>
+			<button class="btn btn-dark btn-lg" type="submit">Entrar</button>
+		</form>
+		<div class="auth-switch"><span>¿No tenés cuenta?</span><a href="/register">Registrate</a></div>
+	</div>
 </div>
 {{template "footer" .}}

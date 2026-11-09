@@ -22,9 +22,10 @@ import (
 func (s *Server) showCatalog(c *gin.Context) {
 	d := catalogView{
 		pageData:     s.basePage(c, "Catálogo de vehículos"),
-		Publications: s.svc.PublicCatalog(),
+		Publications: toPubViews(s.svc.PublicCatalog()),
 	}
-	d.Message = flash(c.Query("status"))
+	d.Nav = "catalog"
+	setFlash(&d.pageData, c.Query("status"))
 	c.HTML(http.StatusOK, "catalog.html", d)
 }
 
@@ -34,7 +35,7 @@ func (s *Server) showCatalog(c *gin.Context) {
 
 func (s *Server) showLogin(c *gin.Context) {
 	d := authView{pageData: s.basePage(c, "Iniciar sesión")}
-	d.Message = flash(c.Query("status"))
+	setFlash(&d.pageData, c.Query("status"))
 	c.HTML(http.StatusOK, "login.html", d)
 }
 
@@ -92,9 +93,10 @@ func (s *Server) renderSeller(c *gin.Context, status int, errMsg string) {
 
 	d := sellerView{
 		pageData:     s.basePage(c, "Panel del vendedor"),
-		Publications: pubs,
+		Publications: toPubViews(pubs),
 	}
-	d.Message = flash(c.Query("status"))
+	d.Nav = "seller"
+	setFlash(&d.pageData, c.Query("status"))
 	d.Error = errMsg
 	if err != nil && d.Error == "" {
 		d.Error = err.Error()
@@ -283,10 +285,26 @@ func (s *Server) renderAdmin(c *gin.Context, status int, errMsg string) {
 
 	d := adminView{
 		pageData: s.basePage(c, "Administración"),
-		Pending:  pending,
-		Users:    users,
+		Tab:      adminTab(c),
+		Pending:  toPubViews(pending),
+		Users:    make([]userView, len(users)),
 	}
-	d.Message = flash(c.Query("status"))
+	d.Nav = "admin"
+	setFlash(&d.pageData, c.Query("status"))
+
+	// Se resuelve el nombre de cada vendedor para mostrarlo en las tarjetas.
+	names := make(map[string]string, len(users))
+	for i, u := range users {
+		names[u.ID] = u.Username
+		d.Users[i] = userView{User: u, IsSelf: u.Username == d.Username}
+	}
+	for i := range d.Pending {
+		if name, ok := names[d.Pending[i].SellerID]; ok {
+			d.Pending[i].SellerName = name
+		} else {
+			d.Pending[i].SellerName = d.Pending[i].SellerID
+		}
+	}
 	d.Error = errMsg
 	if d.Error == "" {
 		if pendingErr != nil {
@@ -322,7 +340,16 @@ func (s *Server) deleteUser(c *gin.Context) {
 		s.renderAdmin(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.Redirect(http.StatusFound, "/admin?status=deleted_user")
+	c.Redirect(http.StatusFound, "/admin?tab=users&status=deleted_user")
+}
+
+// adminTab devuelve la pestaña activa del panel de administración.
+func adminTab(c *gin.Context) string {
+	// Un error al eliminar un usuario debe mostrarse en la pestaña de usuarios.
+	if c.Query("tab") == "users" || c.FullPath() == "/admin/users/:id/delete" {
+		return "users"
+	}
+	return "pending"
 }
 
 // showAudit presenta la traza de auditoría y verifica su integridad.
@@ -341,9 +368,10 @@ func (s *Server) showAudit(c *gin.Context) {
 
 	d := auditView{
 		pageData:    s.basePage(c, "Auditoría"),
-		Logs:        logs,
+		Logs:        toAuditEntries(logs),
 		IntegrityOK: integrity,
 	}
+	d.Nav = "admin"
 	if err != nil {
 		d.Error = err.Error()
 	}

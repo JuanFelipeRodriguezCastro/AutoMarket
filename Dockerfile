@@ -22,6 +22,7 @@ WORKDIR /app
 
 COPY --from=build /out/automarket /app/automarket
 COPY --from=build /src/web/templates /app/web/templates
+COPY --from=build /src/web/static /app/web/static
 
 USER automarket
 

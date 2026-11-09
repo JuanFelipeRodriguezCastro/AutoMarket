@@ -44,6 +44,8 @@ func main() {
 		log.Printf("no se pudieron configurar los proxies de confianza: %v", err)
 	}
 	router.LoadHTMLGlob("web/templates/*.html")
+	// Hoja de estilos y JavaScript de la interfaz.
+	router.Static("/static", "web/static")
 	handlers.NewServer(svc).Register(router)
 
 	addr := ":" + envOr("PORT", defaultPort)

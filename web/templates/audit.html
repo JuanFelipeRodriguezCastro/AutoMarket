@@ -1,45 +1,51 @@
 {{template "header" .}}
-<h1>Historial de auditoría</h1>
-{{if .Message}}<p class="message ok">{{.Message}}</p>{{end}}
-{{if .Error}}<p class="message error">{{.Error}}</p>{{end}}
+<section class="admin-head">
+	<div class="page-head" style="padding:0">
+		<span class="kicker">Administración</span>
+		<h1>Historial de auditoría</h1>
+	</div>
+	<nav class="segmented" aria-label="Secciones de administración">
+		<a href="/admin">Por revisar</a>
+		<a href="/admin?tab=users">Usuarios</a>
+		<a href="/admin/audit" class="is-active">Auditoría</a>
+	</nav>
+</section>
 
-<div class="card">
-	<h2>Integridad de la traza</h2>
-	<p>
-		{{if .IntegrityOK}}
-		<span class="badge ok">Íntegra</span>
-		La cadena de hashes es válida: no se detectaron alteraciones en el historial.
-		{{else}}
-		<span class="badge bad">Alterada</span>
-		La cadena de hashes no coincide: el historial pudo haber sido modificado.
-		{{end}}
-	</p>
+{{if .Error}}<p class="alert alert-error" role="alert" style="margin:0 0 18px">{{.Error}}</p>{{end}}
+
+{{if .IntegrityOK}}
+<div class="integrity">
+	<span class="mark" aria-hidden="true">✓</span>
+	<div class="text">
+		<strong>Historial íntegro <span class="badge">Íntegra</span></strong>
+		<span>{{len .Logs}} eventos verificados con la cadena de hashes SHA-256.</span>
+	</div>
 </div>
+{{else}}
+<div class="integrity is-bad">
+	<span class="mark" aria-hidden="true">!</span>
+	<div class="text">
+		<strong>El historial fue alterado <span class="badge">Alterada</span></strong>
+		<span>La cadena de hashes no coincide: el historial pudo haber sido modificado.</span>
+	</div>
+</div>
+{{end}}
 
-<div class="card">
-	<h2>Eventos registrados</h2>
-	{{if .Logs}}
-	<table class="audit-table">
-		<thead>
-			<tr><th>Fecha</th><th>Acción</th><th>Usuario</th><th>Rol</th><th>Resultado</th><th>Detalles</th></tr>
-		</thead>
-		<tbody>
-			{{range .Logs}}
-			<tr>
-				<td>{{.Timestamp.Format "2006-01-02 15:04:05"}}</td>
-				<td>{{.Action}}</td>
-				<td>{{.UserID}}</td>
-				<td>{{.Role}}</td>
-				<td>{{if .Success}}<span class="badge ok">OK</span>{{else}}<span class="badge bad">Denegado</span>{{end}}</td>
-				<td>{{.Details}}</td>
-			</tr>
-			{{end}}
-		</tbody>
-	</table>
-	{{else}}
-	<p class="muted">No hay eventos registrados.</p>
+{{if .Logs}}
+<div class="card audit-list">
+	{{range .Logs}}
+	<div class="audit-item{{if not .Success}} is-fail{{end}}">
+		<span class="dot" aria-hidden="true"></span>
+		<div class="meta">
+			<span class="title">{{.Label}} <span>· {{if .UserID}}{{.UserID}}{{else}}desconocido{{end}}{{if .Role}} · {{.Role}}{{end}}</span></span>
+			<span class="details">{{.Details}}{{if not .Success}} · <span class="fail-tag">Denegado</span>{{end}}</span>
+			<span class="code" title="{{.Hash}}">{{.Action}} · sha256 {{.Hash}}</span>
+		</div>
+		<time datetime="{{.Timestamp.Format "2006-01-02T15:04:05Z07:00"}}">{{.TimeLabel}}</time>
+	</div>
 	{{end}}
 </div>
-
-<p><a href="/admin">← Volver al panel de administración</a></p>
+{{else}}
+<div class="empty"><strong>Sin eventos</strong><span>No hay eventos registrados.</span></div>
+{{end}}
 {{template "footer" .}}

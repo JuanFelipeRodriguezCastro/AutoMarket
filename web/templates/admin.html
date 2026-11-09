@@ -1,65 +1,77 @@
 {{template "header" .}}
-<h1>Administración</h1>
-{{if .Message}}<p class="message ok">{{.Message}}</p>{{end}}
-{{if .Error}}<p class="message error">{{.Error}}</p>{{end}}
+<section class="admin-head">
+	<div class="page-head" style="padding:0">
+		<span class="kicker">Administración</span>
+		<h1>{{.Headline}}</h1>
+	</div>
+	<nav class="segmented" aria-label="Secciones de administración">
+		<a href="/admin" class="{{if eq .Tab "pending"}}is-active{{end}}">Por revisar · {{len .Pending}}</a>
+		<a href="/admin?tab=users" class="{{if eq .Tab "users"}}is-active{{end}}">Usuarios</a>
+		<a href="/admin/audit">Auditoría</a>
+	</nav>
+</section>
 
-<p><a href="/admin/audit">Ver historial de auditoría →</a></p>
+{{if .Error}}<p class="alert alert-error" role="alert" style="margin:0 0 18px">{{.Error}}</p>{{end}}
 
-<div class="card">
-	<h2>Publicaciones pendientes de aprobación</h2>
-	{{if .Pending}}
-	<table>
-		<thead>
-			<tr><th>Vehículo</th><th>Año</th><th>Precio</th><th>Fotos</th><th>Vendedor</th><th>Acciones</th></tr>
-		</thead>
-		<tbody>
-			{{range .Pending}}
-			<tr id="pub-{{.ID}}">
-				<td>{{.Brand}} {{.Model}}</td>
-				<td>{{.Year}}</td>
-				<td>${{printf "%.2f" .Price}}</td>
-				<td>{{len .Photos}}</td>
-				<td>{{.SellerID}}</td>
-				<td>
-					<form method="post" action="/admin/publications/{{.ID}}/approve" style="display:inline">
-						<button type="submit">Autorizar</button>
-					</form>
-					<form method="post" action="/admin/publications/{{.ID}}/delete" style="display:inline">
-						<button class="danger" type="submit">Eliminar</button>
-					</form>
-				</td>
-			</tr>
-			{{end}}
-		</tbody>
-	</table>
-	{{else}}
-	<p class="muted">No hay publicaciones pendientes.</p>
-	{{end}}
-</div>
-
-<div class="card">
-	<h2>Usuarios</h2>
+{{if eq .Tab "users"}}
 	{{if .Users}}
-	<table>
-		<thead>
-			<tr><th>Usuario</th><th>Rol</th><th>Acción</th></tr>
-		</thead>
-		<tbody>
-			{{range .Users}}
-			<tr id="user-{{.ID}}">
-				<td>{{.Username}}</td>
-				<td>{{.Role}}</td>
-				<td>
-					<form method="post" action="/admin/users/{{.ID}}/delete">
-						<button class="danger" type="submit">Eliminar</button>
-					</form>
-				</td>
-			</tr>
+	<div class="card list-card">
+		{{range .Users}}
+		<div class="user-row" id="user-{{.ID}}">
+			<span class="avatar avatar-lg">{{.Initial}}</span>
+			<div class="meta">
+				<strong>{{.Username}}</strong>
+				<span>{{.RoleLabel}}{{if eq .Role "ADMINISTRADOR"}} · Acceso total{{end}}</span>
+			</div>
+			{{if .IsSelf}}
+			<span class="self">Vos</span>
+			{{else}}
+			<form method="post" action="/admin/users/{{.ID}}/delete">
+				<button class="btn btn-danger btn-sm" type="submit" data-confirm="Confirmar">Eliminar</button>
+			</form>
 			{{end}}
-		</tbody>
-	</table>
+		</div>
+		{{end}}
+	</div>
 	{{else}}
-	<p class="muted">No hay usuarios registrados.</p>
+	<div class="empty"><strong>Sin usuarios</strong><span>No hay usuarios registrados.</span></div>
 	{{end}}
-</div>
+{{else}}
+	{{if .Pending}}
+	<div class="review-grid">
+		{{range .Pending}}
+		<article class="card review" id="pub-{{.ID}}">
+			<div class="photo">
+				{{template "photo" .}}
+				<span class="status pending">En revisión</span>
+			</div>
+			<div class="body">
+				<span class="name">{{.Brand}} {{.Model}} · {{.Year}}</span>
+				<span class="price">{{.PriceLabel}}</span>
+				<span class="by">Publicado por {{.SellerName}} · {{.PhotoLabel}}</span>
+				<span class="by">{{.Phone}} · {{.Email}}</span>
+			</div>
+			{{if gt (len .Photos) 1}}
+			<div class="gallery">
+				{{range .Photos}}<a href="{{.}}" target="_blank" rel="noopener"><img src="{{.}}" alt="Foto del vehículo" loading="lazy"></a>{{end}}
+			</div>
+			{{end}}
+			<div class="actions">
+				<form method="post" action="/admin/publications/{{.ID}}/approve">
+					<button class="btn btn-ok btn-block" type="submit">Aprobar</button>
+				</form>
+				<form method="post" action="/admin/publications/{{.ID}}/delete">
+					<button class="btn btn-danger btn-block" type="submit" data-confirm="¿Rechazar?">Rechazar</button>
+				</form>
+			</div>
+		</article>
+		{{end}}
+	</div>
+	{{else}}
+	<div class="empty" style="border-style:solid">
+		<strong>Todo al día</strong>
+		<span>No hay publicaciones esperando revisión.</span>
+	</div>
+	{{end}}
+{{end}}
 {{template "footer" .}}
